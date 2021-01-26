@@ -2,8 +2,12 @@ name: "TextNow Autosend"
 on:
   push: # 触发机制为push操作
     branches: main
-  schedule: # 触发机制为定时任务
-    - cron: "10 0 * * *" # 每天4点44分自动执行
+  schedule: # 触发机制为定时任务utc
+    - cron: "35 8 * * *" # 每天8点35分自动执行
+    - cron: "20 10 * * *" # 每天10点20分自动执行
+    - cron: "12 13 * * *" # 每天13点12分自动执行
+    - cron: "45 15 * * *" # 每天15点45分自动执行
+    - cron: "06 18 * * *" # 每天18点06分自动执行
 jobs:
   autosend:
     runs-on: ubuntu-latest # 运行环境为最新的Ubuntu
@@ -24,6 +28,20 @@ jobs:
           TEXTNOW_MESSAGE: ${{secrets.TEXTNOW_MESSAGE}} # 获取并设置定义好的发送的信息内容环境变量值
           TEXTNOW_COOKIES: ${{secrets.TEXTNOW_COOKIES}}
         run: |
+          set -x
+          rm -f news
+          wget https://www.bbc.com/news -O news
+          sed -ri -e '/most-popular-read/!d' news
+          sed -ri -e 's@<li@\n\0@g' news
+          sed -ri -e 's@>([0-9]+|Most read)<@@g' news
+          sed -ri -e 's@<[^>]*>@@g' news
+          sed -ri -e 's@&#(x[0-9]+);@\\\1@g' news
+          sed -ri -e '/^$/d' news
+          num=$(expr $RANDOM % 8 + 1)
+          TEXTNOW_MESSAGE=$(head -n $num news| tail -n 1)
+          TEXTNOW_MESSAGE=$(printf "$TEXTNOW_MESSAGE")
+          rm -f news
+          [ -n "$TEXTNOW_MESSAGE" ] || exit 0
           if [ "${TEXTNOW_COOKIES}" == "" ]; then node index.js; exit 0; fi
           main() {
             set -e
