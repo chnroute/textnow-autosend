@@ -23,7 +23,7 @@
     page = await browser.newPage();
     const client = await page.target().createCDPSession();
     let cookies = null;
-
+    console.log(username.split('').join(' '));
     // Importing exsiting cookies from file
     try {
       console.log("Importing existing cookies...");
